@@ -1,0 +1,44 @@
+name: publish
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - run: |
+          cat << EOF > ~/.clasprc.json
+            {
+              "token": {
+                "access_token": "",
+                "scope": "https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/logging.read https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/script.webapp.deploy https://www.googleapis.com/auth/script.deployments https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/service.management",
+                "token_type": "Bearer",
+                "expiry_date": 0,
+                "refresh_token": "${{ secrets.GAS_REFRESH_TOKEN }}"
+              },
+              "oauth2ClientSettings": {
+                "clientId": "${{ secrets.GAS_CLIENT_ID }}",
+                "clientSecret": "${{ secrets.GAS_CLIENT_SECRET }}",
+                "redirectUri": "http://localhost"
+              },
+              "isLocalCreds": false
+            }
+          EOF
+      - run: sed -i 's/<scriptId>/${{ secrets.GAS_SCRIPT_ID }}/g' .clasp.json
+      - run: npm run deploy --description "$TAG_NAME"

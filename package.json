@@ -1,0 +1,45 @@
+{
+  "name": "youyaku-gpt-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "ISC",
+  "scripts": {
+    "build": "webpack",
+    "push": "npm run build && clasp push",
+    "deploy": "npm run build && clasp push && clasp deploy",
+    "prettier": "prettier --parser typescript --write 'src/**/*.ts' 'src/*.ts' webpack.config.ts",
+    "prepare": "husky install",
+    "typecheck": "tsc --noEmit",
+    "get-tokens": "node -e 'let hoge=require(process.env.HOME+\"/.clasprc.json\");console.log(\"GAS_CLIENT_ID: \"+hoge.oauth2ClientSettings.clientId);console.log(\"GAS_CLIENT_SECRET: \"+hoge.oauth2ClientSettings.clientSecret);console.log(\"GAS_REFRESH_TOKEN: \"+hoge.token.refresh_token);'",
+    "test": ""
+  },
+  "keywords": [],
+  "author": "kyo-ago",
+  "description": "",
+  "devDependencies": {
+    "@babel/core": "7.23.7",
+    "@babel/plugin-transform-class-properties": "^7.23.3",
+    "@babel/preset-env": "7.23.7",
+    "@google/clasp": "2.4.2",
+    "@types/copy-webpack-plugin": "10.1.0",
+    "@types/google-apps-script": "1.0.78",
+    "babel-loader": "9.1.3",
+    "copy-webpack-plugin": "11.0.0",
+    "gas-webpack-plugin": "2.5.0",
+    "husky": "8.0.3",
+    "lint-staged": "15.2.0",
+    "prettier": "3.1.1",
+    "ts-loader": "9.5.1",
+    "ts-node": "10.9.2",
+    "typescript": "5.3.3",
+    "webpack": "5.89.0",
+    "webpack-cli": "5.1.4"
+  },
+  "lint-staged": {
+    "src/*.{js,ts,md}": "prettier --parser typescript --write"
+  },
+  "dependencies": {
+    "fast-text-encoding": "1.0.6",
+    "js-tiktoken": "1.0.8"
+  }
+}
