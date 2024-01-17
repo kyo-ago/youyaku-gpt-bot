@@ -1,1 +1,4 @@
-changelog: exclude: labels: -tagpr;
+changelog:
+  exclude:
+    labels:
+      - tagpr
