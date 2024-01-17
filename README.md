@@ -1,3 +1,23 @@
+# GAS ScriptProperties
+
+* BOT_MEMBER_ID
+* BOT_AUTH_TOKEN
+* OPENAI_SECRET_KEY
+
+# secrets
+
+* GAS_SCRIPT_ID
+
+* GAS_REFRESH_TOKEN
+* GAS_CLIENT_ID
+* GAS_CLIENT_SECRET
+
+```
+$ npm run get-tokens
+```
+
+# Links
+
 [Slackのinputチャンネルで組織内の知識を増やす ｜あっきー](https://note.com/kuronekopunk/n/n83a5f736b609)
 
 [技術blogのリンクを投げたらChatGPTが要約して、いい感じに整形してチャンネル投稿してくれるbotを社内Slackに生やしたら捗った話](https://zenn.dev/sigmai_tech/articles/368533f22feb7f)
