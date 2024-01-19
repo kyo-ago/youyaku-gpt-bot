@@ -6,21 +6,22 @@ const gptModel = "gpt-3.5-turbo";
 
 const TOKEN_LIMIT = 4000;
 
-const getRequestMessage = (title: string, body: string) => [
+const getRequestMessage = (prompt: string, title: string, body: string) => [
   { role: "system", content: "You are a helpful assistant." },
   { role: "assistant", content: `【Title】${title}\n###\n${body}` },
   {
     role: "user",
-    content:
-      "この記事の内容について、技術的な視点で要約をしてください。\nlang:ja",
+    content: `${
+      prompt || "この記事の内容について、技術的な視点で要約をしてください。"
+    }\nlang:ja`,
   },
 ];
 
-const truncateMessage = (title: string, body: string) => {
+const truncateMessage = (prompt: string, title: string, body: string) => {
   const enc = new Tiktoken(cl100k_base_default);
   while (true) {
     const tokens = enc.encode(
-      getRequestMessage(title, body)
+      getRequestMessage(prompt, title, body)
         .map((message) => message.content)
         .join(""),
     );
@@ -44,7 +45,11 @@ const tryCache = <TryResult>(
   }
 };
 
-export const fetchAIAnswer = (link: string, openaiSecretKey: string) => {
+export const fetchAIAnswer = (
+  link: string,
+  prompt: string,
+  openaiSecretKey: string,
+) => {
   const [error, result] = tryCache(() => UrlFetchApp.fetch(link));
   if (error) {
     return `URLの参照に失敗しました: ${error.message}`;
@@ -56,7 +61,7 @@ export const fetchAIAnswer = (link: string, openaiSecretKey: string) => {
     })
     .asText();
 
-  const body = truncateMessage(content.title, content.body);
+  const body = truncateMessage(prompt, content.title, content.body);
   const option = {
     method: "post",
     headers: {
@@ -66,7 +71,7 @@ export const fetchAIAnswer = (link: string, openaiSecretKey: string) => {
     contentType: "application/json",
     payload: JSON.stringify({
       model: gptModel,
-      messages: getRequestMessage(content.title, body),
+      messages: getRequestMessage(prompt, content.title, body),
       temperature: 0.0,
     }),
   } as const;
