@@ -3,6 +3,7 @@ import { fetchAIAnswer } from "./fetch-ai-answer";
 import { checkTargetMessage } from "./check-target-message";
 import { SlackEventType, SlackMessageType } from "./@types/type";
 import { slackPostMessage } from "./slack-post-message";
+import { fetchPrompt } from "./fetch-prompt";
 
 const BOT_MEMBER_ID =
   PropertiesService.getScriptProperties().getProperty("BOT_MEMBER_ID")!;
@@ -15,7 +16,8 @@ const getResultMessage = (e: GoogleAppsScript.Events.DoPost) => {
   const message = JSON.parse(e.postData.contents) as SlackMessageType;
   return checkTargetMessage(message, BOT_MEMBER_ID, {
     target: (event: SlackEventType, link: string) => {
-      const answer = fetchAIAnswer(link, OPENAI_SECRET_KEY);
+      const prompt = fetchPrompt(event.channel, BOT_AUTH_TOKEN);
+      const answer = fetchAIAnswer(link, prompt, OPENAI_SECRET_KEY);
       slackPostMessage(event.channel, answer, BOT_AUTH_TOKEN);
       return "OK";
     },
