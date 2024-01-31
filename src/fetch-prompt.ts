@@ -1,14 +1,22 @@
 export const fetchPrompt = (channelId: string, botAuthToken: string) => {
   const response = UrlFetchApp.fetch(
-    `https://slack.com/api/conversations.info?token=${botAuthToken}&channel=${channelId}`,
+    `https://slack.com/api/conversations.info?channel=${channelId}`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + botAuthToken,
+      },
+    },
   );
-  const responseJson = JSON.parse(response.getContentText());
+  const contentText = response.getContentText();
+  const responseJson = JSON.parse(contentText);
   if (responseJson.ok) {
     return (
-      responseJson.purpose?.value?.match(/```prompt[\s\S]+?(?:```|$)/)?.pop() ||
-      ""
+      responseJson.channel.purpose.value
+        .match(/```prompt[\s\S]+?(?:```|$)/)
+        ?.pop() || ""
     );
   } else {
-    throw new Error("Failed to fetch conversations info");
+    throw new Error(`Failed to fetch conversations info\n${contentText}`);
   }
 };

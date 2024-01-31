@@ -52,7 +52,7 @@ export const fetchAIAnswer = (
 ) => {
   const [error, result] = tryCache(() => UrlFetchApp.fetch(link));
   if (error) {
-    return `URLの参照に失敗しました: ${error.message}`;
+    return `URLの参照に失敗しました: "${error.message}"`;
   }
   const html = result.getContentText();
   const content = new ExtractContent()
