@@ -53,10 +53,15 @@ jobs:
           sorted_deployments=$(echo "$deployments" | perl -ne 'print if /@\d+/' | perl -pe 's/^\s*-\s+([-\w]+)\s+\@(\d+).*/$1 $2/' | sort -k 2 -nr)
           latest_deployment_id=$(echo "$sorted_deployments" | head -n 1 | awk '{print $1}')
 
+          echo "steps.tagpr.outputs.tag: ${{ steps.tagpr.outputs.tag }}"
+          echo "latest_deployment_id: $latest_deployment_id"
           npm run deploy --deploymentId $latest_deployment_id --description "${{ steps.tagpr.outputs.tag }}"
 
           echo "$sorted_deployments" | while read -r deployment_id version; do
+            echo "deployment_id: $deployment_id"
             if [[ "$deployment_id" != "$latest_deployment_id" ]]; then
               npx clasp undeploy $deployment_id
+            else
+              echo "skip"
             fi
           done
