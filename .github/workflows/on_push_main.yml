@@ -55,7 +55,6 @@ jobs:
 
           echo "steps.tagpr.outputs.tag: ${{ steps.tagpr.outputs.tag }}"
           echo "latest_deployment_id: $latest_deployment_id"
-          npm run deploy --deploymentId $latest_deployment_id --description "${{ steps.tagpr.outputs.tag }}"
 
           echo "$sorted_deployments" | while read -r deployment_id version; do
             echo "deployment_id: $deployment_id"
@@ -65,3 +64,4 @@ jobs:
               echo "skip"
             fi
           done
+          npm run deploy -d "${{ steps.tagpr.outputs.tag }}" -i $latest_deployment_id
