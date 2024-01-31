@@ -13,11 +13,50 @@ jobs:
   on_push_master:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    outputs:
-      tag: ${{ steps.tagpr.outputs.tag }}
     steps:
-     - uses: actions/checkout@v4
-     - uses: Songmu/tagpr@v1
-       id: tagpr
-       env:
-         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - uses: Songmu/tagpr@v1
+        id: tagpr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          cat << EOF > ~/.clasprc.json
+            {
+              "token": {
+                "access_token": "",
+                "scope": "https://www.googleapis.com/auth/script.projects https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/logging.read https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/script.webapp.deploy https://www.googleapis.com/auth/script.deployments https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/service.management",
+                "token_type": "Bearer",
+                "expiry_date": 0,
+                "refresh_token": "${{ secrets.GAS_REFRESH_TOKEN }}"
+              },
+              "oauth2ClientSettings": {
+                "clientId": "${{ secrets.GAS_CLIENT_ID }}",
+                "clientSecret": "${{ secrets.GAS_CLIENT_SECRET }}",
+                "redirectUri": "http://localhost"
+              },
+              "isLocalCreds": false
+            }
+          EOF
+      - run: sed -i 's/<scriptId>/${{ secrets.GAS_SCRIPT_ID }}/g' .clasp.json
+      - name: ""
+        if: steps.tagpr.outputs.tag != ''
+        run: |
+          deployments=$(npx clasp deployments)
+
+          sorted_deployments=$(echo "$deployments" | perl -ne 'print if /@\d+/' | perl -pe 's/^\s*-\s+([-\w]+)\s+\@(\d+).*/$1 $2/' | sort -k 2 -nr)
+          latest_deployment_id=$(echo "$sorted_deployments" | head -n 1 | awk '{print $1}')
+
+          npm run deploy --deploymentId $latest_deployment_id --description "${{ steps.tagpr.outputs.tag }}"
+
+          echo "$sorted_deployments" | while read -r deployment_id version; do
+            if [[ "$deployment_id" != "$latest_deployment_id" ]]; then
+              npx clasp undeploy $deployment_id
+            fi
+          done
