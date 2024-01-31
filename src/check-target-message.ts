@@ -8,6 +8,13 @@ const isCachedId = (id: string) => {
   return false;
 };
 
+const isTargetUrl = (url: string) => {
+  if (url.match(/https:\/\/\w+\.slack\.com\/archives\/\w/)) {
+    return false;
+  }
+  return true;
+};
+
 export const checkTargetMessage = <R>(
   message: SlackMessageType,
   botMemberId: string,
@@ -40,12 +47,16 @@ export const checkTargetMessage = <R>(
     return matcher.other();
   }
 
-  const link = message.event.text
-    .match(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/g)
-    ?.shift();
-  if (!link) {
+  const links = message.event.text
+    .replace(/\s/g, "")
+    .match(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/);
+  if (!links) {
     return matcher.other();
   }
 
+  const link = links.shift() || "";
+  if (!isTargetUrl(link)) {
+    return matcher.other();
+  }
   return matcher.target(message.event, link);
 };

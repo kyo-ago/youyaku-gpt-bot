@@ -40,4 +40,16 @@ jobs:
             }
           EOF
       - run: sed -i 's/<scriptId>/${{ secrets.GAS_SCRIPT_ID }}/g' .clasp.json
-      - run: npm run deploy --description "$TAG_NAME"
+      - run: |
+          deployments=$(npx clasp deployments)
+
+          sorted_deployments=$(echo "$deployments" | perl -ne 'print if /@\d+/' | perl -pe 's/^\s*-\s+([-\w]+)\s+\@(\d+).*/$1 $2/' | sort -k 2 -nr)
+          latest_deployment_id=$(echo "$sorted_deployments" | head -n 1 | awk '{print $1}')
+
+          npm run deploy --deploymentId $latest_deployment_id --description "$TAG_NAME"
+
+          echo "$sorted_deployments" | while read -r deployment_id version; do
+            if [[ "$deployment_id" != "$latest_deployment_id" ]]; then
+              npx clasp undeploy $deployment_id
+            fi
+          done

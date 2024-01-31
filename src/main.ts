@@ -16,9 +16,13 @@ const getResultMessage = (e: GoogleAppsScript.Events.DoPost) => {
   const message = JSON.parse(e.postData.contents) as SlackMessageType;
   return checkTargetMessage(message, BOT_MEMBER_ID, {
     target: (event: SlackEventType, link: string) => {
-      const prompt = fetchPrompt(event.channel, BOT_AUTH_TOKEN);
-      const answer = fetchAIAnswer(link, prompt, OPENAI_SECRET_KEY);
-      slackPostMessage(event.channel, answer, BOT_AUTH_TOKEN);
+      try {
+        const prompt = fetchPrompt(event.channel, BOT_AUTH_TOKEN);
+        const answer = fetchAIAnswer(link, prompt, OPENAI_SECRET_KEY);
+        slackPostMessage(event.channel, answer, BOT_AUTH_TOKEN);
+      } catch (e: any) {
+        slackPostMessage(event.channel, e.message, BOT_AUTH_TOKEN);
+      }
       return "OK";
     },
     // challenge call from Slack
@@ -36,23 +40,4 @@ function doPost(e: GoogleAppsScript.Events.DoPost) {
   }
 }
 
-function doPostTest() {
-  const param = {
-    parameter: {},
-    contextPath: "",
-    contentLength: 0,
-    queryString: "",
-    parameters: {},
-    postData: {
-      contents: `{"type":"url_verification","challenge":"response","event":{"type":"message","user":"1","client_msg_id":"1","channel":"1","ts":"1","text":"https://example.com/"}}`,
-      length: 0,
-      type: "text/plain",
-      name: "postData",
-    },
-    pathInfo: "",
-  };
-  const result = getResultMessage(param);
-  console.log(result);
-}
 (global as any).doPost = doPost;
-(global as any).doPostTest = doPostTest;
