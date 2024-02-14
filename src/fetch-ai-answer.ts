@@ -11,15 +11,14 @@ const getRequestMessage = (prompt: string, title: string, body: string) => [
   { role: "assistant", content: `【Title】${title}\n###\n${body}` },
   {
     role: "user",
-    content: `${
-      prompt || "この記事の内容について、技術的な視点で要約をしてください。"
-    }\nlang:ja`,
+    content: `${prompt}\nlang:ja`,
   },
 ];
 
 const truncateMessage = (prompt: string, title: string, body: string) => {
   const enc = new Tiktoken(cl100k_base_default);
-  while (true) {
+  let count = 50;
+  while (count--) {
     const tokens = enc.encode(
       getRequestMessage(prompt, title, body)
         .map((message) => message.content)

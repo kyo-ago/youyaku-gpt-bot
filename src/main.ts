@@ -15,13 +15,13 @@ const OPENAI_SECRET_KEY =
 const getResultMessage = (e: GoogleAppsScript.Events.DoPost) => {
   const message = JSON.parse(e.postData.contents) as SlackMessageType;
   return checkTargetMessage(message, BOT_MEMBER_ID, {
-    target: (event: SlackEventType, link: string) => {
+    target: (channel, link, attachment) => {
       try {
-        const prompt = fetchPrompt(event.channel, BOT_AUTH_TOKEN);
+        const prompt = fetchPrompt(channel, attachment, BOT_AUTH_TOKEN);
         const answer = fetchAIAnswer(link, prompt, OPENAI_SECRET_KEY);
-        slackPostMessage(event.channel, answer, BOT_AUTH_TOKEN);
+        slackPostMessage(channel, answer, BOT_AUTH_TOKEN);
       } catch (e: any) {
-        slackPostMessage(event.channel, e.message, BOT_AUTH_TOKEN);
+        slackPostMessage(channel, e.message, BOT_AUTH_TOKEN);
       }
       return "OK";
     },

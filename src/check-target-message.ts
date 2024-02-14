@@ -1,4 +1,8 @@
-import { SlackEventType, SlackMessageType } from "./@types/type";
+import {
+  SlackEventAttachments,
+  SlackEventType,
+  SlackMessageType,
+} from "./@types/type";
 
 const isCachedId = (id: string) => {
   const cache = CacheService.getScriptCache();
@@ -19,7 +23,11 @@ export const checkTargetMessage = <R>(
   message: SlackMessageType,
   botMemberId: string,
   matcher: {
-    target: (event: SlackEventType, link: string) => R;
+    target: (
+      channelId: string,
+      link: string,
+      attachment: SlackEventAttachments,
+    ) => R;
     // challenge call from Slack
     challenge: (challenge: string) => R;
     other: () => R;
@@ -33,30 +41,50 @@ export const checkTargetMessage = <R>(
     return matcher.other();
   }
 
-  // message modified or deleted
-  if (message.event.subtype !== undefined) {
+  if (message.event.subtype !== "message_changed") {
+    return matcher.other();
+  }
+
+  if (!message.event.message) {
     return matcher.other();
   }
 
   // from bot message
-  if (message.event.user === botMemberId) {
+  if (message.event.message.user === botMemberId) {
     return matcher.other();
   }
 
-  if (isCachedId(message.event.client_msg_id)) {
+  if (
+    message.event.message.client_msg_id &&
+    isCachedId(message.event.message.client_msg_id)
+  ) {
     return matcher.other();
   }
 
-  const links = message.event.text
-    .replace(/\s/g, "")
-    .match(/https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+/);
-  if (!links) {
+  if (message.event.message.blocks.length !== 1) {
     return matcher.other();
   }
-
-  const link = links.shift() || "";
+  const block = message.event.message.blocks[0];
+  if (
+    block?.elements.length !== 1 &&
+    block?.elements[0].type !== "rich_text_section"
+  ) {
+    return matcher.other();
+  }
+  const section = block.elements[0];
+  if (section?.elements.length !== 1 && section?.elements[0].type !== "link") {
+    return matcher.other();
+  }
+  const link = section.elements[0]?.url;
+  if (!link) {
+    return matcher.other();
+  }
   if (!isTargetUrl(link)) {
     return matcher.other();
   }
-  return matcher.target(message.event, link);
+  const attachment = message.event.message.attachments.shift();
+  if (!attachment) {
+    return matcher.other();
+  }
+  return matcher.target(message.event.channel, link, attachment);
 };
