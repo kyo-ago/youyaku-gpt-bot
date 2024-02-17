@@ -1,10 +1,9 @@
-import {
-  SlackEventAttachments,
-  SlackEventType,
-  SlackMessageType,
-} from "./@types/type";
+import { SlackEventAttachments, SlackMessageType } from "./@types/type";
 
-const isCachedId = (id: string) => {
+const isCachedId = (id: string | null) => {
+  if (!id) {
+    return false;
+  }
   const cache = CacheService.getScriptCache();
   const isCached = cache.get(id);
   if (isCached) return true;
@@ -54,13 +53,6 @@ export const checkTargetMessage = <R>(
     return matcher.other();
   }
 
-  if (
-    message.event.message.client_msg_id &&
-    isCachedId(message.event.message.client_msg_id)
-  ) {
-    return matcher.other();
-  }
-
   if (message.event.message.blocks.length !== 1) {
     return matcher.other();
   }
@@ -84,6 +76,9 @@ export const checkTargetMessage = <R>(
   }
   const attachment = message.event.message.attachments.shift();
   if (!attachment) {
+    return matcher.other();
+  }
+  if (isCachedId(message.event.message.ts)) {
     return matcher.other();
   }
   return matcher.target(message.event.channel, link, attachment);

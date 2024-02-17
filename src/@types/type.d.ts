@@ -44,6 +44,7 @@ export type SlackEventAttachments = {
 
 export type SlackEventType = {
   message: {
+    ts: string;
     user: string;
     client_msg_id: string;
     attachments: SlackEventAttachments[];
