@@ -1,5 +1,7 @@
 # Changelog
 
+## [v0.1.5](https://github.com/kyo-ago/youyaku-gpt-bot/compare/v0.1.4...v0.1.5) - 2024-02-17
+
 ## [v0.1.4](https://github.com/kyo-ago/youyaku-gpt-bot/compare/v0.1.3...v0.1.4) - 2024-01-31
 - fix: actions by @kyo-ago in https://github.com/kyo-ago/youyaku-gpt-bot/pull/17
 
